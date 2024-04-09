@@ -9,22 +9,30 @@ import (
 )
 
 type Game struct {
-	Map       GameMap
-	World     *ecs.Manager
-	WorldTags map[string]ecs.Tag
+	Map         GameMap
+	World       *ecs.Manager
+	WorldTags   map[string]ecs.Tag
+	Turn        TurnState
+	TurnCounter int
 }
 
 func NewGame() *Game {
 	g := &Game{}
-	world, tags := InitializeWorld()
 	g.Map = NewGameMap()
+	world, tags := InitializeWorld(g.Map.CurrentLevel)
 	g.World = world
 	g.WorldTags = tags
+	g.Turn = PlayerTurn
+	g.TurnCounter = 0
 	return g
 }
 
 func (g *Game) Update() error {
-	TryMovePlayer(g)
+	g.TurnCounter++
+	if g.Turn == PlayerTurn && g.TurnCounter > 20 {
+		TryMovePlayer(g)
+	}
+	g.Turn = PlayerTurn
 	return nil
 }
 
