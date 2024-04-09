@@ -4,12 +4,15 @@ import (
 	"log"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/colorm"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/norendren/go-fov/fov"
 )
 
 type Level struct {
-	Tiles []MapTile
-	Rooms []Rect
+	Tiles         []MapTile
+	Rooms         []Rect
+	PlayerVisible *fov.View
 }
 
 func NewLevel() Level {
@@ -17,14 +20,30 @@ func NewLevel() Level {
 	rooms := make([]Rect, 0)
 	l.Rooms = rooms
 	l.GenerateLevelTiles()
+	l.PlayerVisible = fov.New()
 	return l
 }
 
 type MapTile struct {
-	PixelX  int
-	PixelY  int
-	Blocked bool
-	Image   *ebiten.Image
+	PixelX     int
+	PixelY     int
+	Blocked    bool
+	IsRevealed bool
+	Image      *ebiten.Image
+}
+
+func (level Level) InBounds(x, y int) bool {
+	gd := NewGameData()
+	if x < 0 || x > gd.ScreenWidth || y < 0 || y > gd.ScreenHeight {
+		return false
+	}
+	return true
+}
+
+// TODO: Check if Wall and not blocked
+func (level Level) IsOpaque(x, y int) bool {
+	idx := level.GetIndexFromXY(x, y)
+	return level.Tiles[idx].Blocked
 }
 
 func (level *Level) DrawLevel(screen *ebiten.Image) {
@@ -32,10 +51,21 @@ func (level *Level) DrawLevel(screen *ebiten.Image) {
 	//Draw the Map
 	for x := 0; x < gd.ScreenWidth; x++ {
 		for y := 0; y < gd.ScreenHeight; y++ {
-			tile := level.Tiles[level.GetIndexFromXY(x, y)]
-			op := &ebiten.DrawImageOptions{}
-			op.GeoM.Translate(float64(tile.PixelX), float64(tile.PixelY))
-			screen.DrawImage(tile.Image, op)
+			idx := level.GetIndexFromXY(x, y)
+			tile := level.Tiles[idx]
+			isVis := level.PlayerVisible.IsVisible(x, y)
+			if isVis {
+				op := &ebiten.DrawImageOptions{}
+				op.GeoM.Translate(float64(tile.PixelX), float64(tile.PixelY))
+				screen.DrawImage(tile.Image, op)
+				level.Tiles[idx].IsRevealed = true
+			} else if tile.IsRevealed {
+				op := &colorm.DrawImageOptions{}
+				op.GeoM.Translate(float64(tile.PixelX), float64(tile.PixelY))
+				var cm colorm.ColorM
+				cm.Translate(100, 100, 100, 0.25)
+				colorm.DrawImage(screen, tile.Image, cm, op)
+			}
 		}
 	}
 }
@@ -58,10 +88,11 @@ func (level *Level) createTiles() []MapTile {
 				log.Fatal(err)
 			}
 			tile := MapTile{
-				PixelX:  x * gd.TileWidth,
-				PixelY:  y * gd.TileHeight,
-				Blocked: true,
-				Image:   wall,
+				PixelX:     x * gd.TileWidth,
+				PixelY:     y * gd.TileHeight,
+				Blocked:    true,
+				IsRevealed: false,
+				Image:      wall,
 			}
 			tiles[index] = tile
 		}
