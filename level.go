@@ -17,11 +17,32 @@ type Level struct {
 
 func NewLevel() Level {
 	l := Level{}
+	loadTileImages()
 	rooms := make([]Rect, 0)
 	l.Rooms = rooms
 	l.GenerateLevelTiles()
 	l.PlayerVisible = fov.New()
 	return l
+}
+
+var floor *ebiten.Image
+var wall *ebiten.Image
+
+func loadTileImages() {
+	if floor != nil && wall != nil {
+		return
+	}
+	var err error
+
+	floor, _, err = ebitenutil.NewImageFromFile("assets/floor.png")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	wall, _, err = ebitenutil.NewImageFromFile("assets/wall.png")
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 type TileType int
@@ -90,10 +111,6 @@ func (level *Level) createTiles() []*MapTile {
 	for x := 0; x < gd.ScreenWidth; x++ {
 		for y := 0; y < gd.ScreenHeight; y++ {
 			index = level.GetIndexFromXY(x, y)
-			wall, _, err := ebitenutil.NewImageFromFile("assets/wall.png")
-			if err != nil {
-				log.Fatal(err)
-			}
 			tile := MapTile{
 				PixelX:     x * gd.TileWidth,
 				PixelY:     y * gd.TileHeight,
@@ -114,10 +131,6 @@ func (level *Level) createRoom(room Rect) {
 		for x := room.X1 + 1; x < room.X2; x++ {
 			index := level.GetIndexFromXY(x, y)
 			level.Tiles[index].Blocked = false
-			floor, _, err := ebitenutil.NewImageFromFile("assets/floor.png")
-			if err != nil {
-				log.Fatal(err)
-			}
 			level.Tiles[index].Image = floor
 			level.Tiles[index].TileType = FLOOR
 		}
@@ -178,10 +191,6 @@ func (level *Level) createHorizontalTunnel(x1 int, x2 int, y int) {
 		index := level.GetIndexFromXY(x, y)
 		if index > 0 && index < gd.ScreenWidth*gd.ScreenHeight {
 			level.Tiles[index].Blocked = false
-			floor, _, err := ebitenutil.NewImageFromFile("assets/floor.png")
-			if err != nil {
-				log.Fatal(err)
-			}
 			level.Tiles[index].Image = floor
 			level.Tiles[index].TileType = FLOOR
 		}
@@ -195,10 +204,6 @@ func (level *Level) createVerticalTunnel(y1 int, y2 int, x int) {
 
 		if index > 0 && index < gd.ScreenWidth*gd.ScreenHeight {
 			level.Tiles[index].Blocked = false
-			floor, _, err := ebitenutil.NewImageFromFile("assets/floor.png")
-			if err != nil {
-				log.Fatal(err)
-			}
 			level.Tiles[index].Image = floor
 			level.Tiles[index].TileType = FLOOR
 		}
