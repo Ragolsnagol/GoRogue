@@ -38,7 +38,7 @@ func ProcessHUD(g *Game, screen *ebiten.Image) {
 	uiY := (gd.ScreenHeight - gd.UIHeight) * gd.TileHeight
 	uiX := (gd.ScreenWidth * gd.TileWidth) / 2
 	var fontX = uiX + 16
-	var fontY = uiY + 24
+	var fontY = uiY + 6
 	op := &ebiten.DrawImageOptions{}
 	op.GeoM.Translate(float64(uiX), float64(uiY))
 	screen.DrawImage(userLogImg, op)

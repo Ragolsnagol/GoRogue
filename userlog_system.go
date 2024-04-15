@@ -37,7 +37,7 @@ func ProcessUserLog(g *Game, screen *ebiten.Image) {
 
 	uiLocation := (gd.ScreenHeight - gd.UIHeight) * gd.TileHeight
 	var fontX = 24
-	var fontY = uiLocation + 24
+	var fontY = uiLocation + 6
 	op := &ebiten.DrawImageOptions{}
 	op.GeoM.Translate(float64(0.), float64(uiLocation))
 	screen.DrawImage(userLogImg, op)
