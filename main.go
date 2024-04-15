@@ -32,7 +32,9 @@ func (g *Game) Update() error {
 	if g.Turn == PlayerTurn && g.TurnCounter > 20 {
 		TryMovePlayer(g)
 	}
-	g.Turn = PlayerTurn
+	if g.Turn == MonsterTurn {
+		UpdateMonster(g)
+	}
 	return nil
 }
 

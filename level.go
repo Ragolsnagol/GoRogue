@@ -10,7 +10,7 @@ import (
 )
 
 type Level struct {
-	Tiles         []MapTile
+	Tiles         []*MapTile
 	Rooms         []Rect
 	PlayerVisible *fov.View
 }
@@ -24,12 +24,20 @@ func NewLevel() Level {
 	return l
 }
 
+type TileType int
+
+const (
+	WALL TileType = iota
+	FLOOR
+)
+
 type MapTile struct {
 	PixelX     int
 	PixelY     int
 	Blocked    bool
 	IsRevealed bool
 	Image      *ebiten.Image
+	TileType   TileType
 }
 
 func (level Level) InBounds(x, y int) bool {
@@ -40,10 +48,9 @@ func (level Level) InBounds(x, y int) bool {
 	return true
 }
 
-// TODO: Check if Wall and not blocked
 func (level Level) IsOpaque(x, y int) bool {
 	idx := level.GetIndexFromXY(x, y)
-	return level.Tiles[idx].Blocked
+	return level.Tiles[idx].TileType == WALL
 }
 
 func (level *Level) DrawLevel(screen *ebiten.Image) {
@@ -75,9 +82,9 @@ func (level *Level) GetIndexFromXY(x int, y int) int {
 	return (y * gd.ScreenWidth) + x
 }
 
-func (level *Level) createTiles() []MapTile {
+func (level *Level) createTiles() []*MapTile {
 	gd := NewGameData()
-	tiles := make([]MapTile, gd.ScreenHeight*gd.ScreenWidth)
+	tiles := make([]*MapTile, gd.ScreenHeight*gd.ScreenWidth)
 	index := 0
 
 	for x := 0; x < gd.ScreenWidth; x++ {
@@ -93,8 +100,9 @@ func (level *Level) createTiles() []MapTile {
 				Blocked:    true,
 				IsRevealed: false,
 				Image:      wall,
+				TileType:   WALL,
 			}
-			tiles[index] = tile
+			tiles[index] = &tile
 		}
 	}
 
@@ -111,6 +119,7 @@ func (level *Level) createRoom(room Rect) {
 				log.Fatal(err)
 			}
 			level.Tiles[index].Image = floor
+			level.Tiles[index].TileType = FLOOR
 		}
 	}
 }
@@ -174,6 +183,7 @@ func (level *Level) createHorizontalTunnel(x1 int, x2 int, y int) {
 				log.Fatal(err)
 			}
 			level.Tiles[index].Image = floor
+			level.Tiles[index].TileType = FLOOR
 		}
 	}
 }
@@ -190,6 +200,7 @@ func (level *Level) createVerticalTunnel(y1 int, y2 int, x int) {
 				log.Fatal(err)
 			}
 			level.Tiles[index].Image = floor
+			level.Tiles[index].TileType = FLOOR
 		}
 	}
 }
